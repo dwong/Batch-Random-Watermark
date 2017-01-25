@@ -39,7 +39,10 @@ size_default = config.get('output_info', 'output_default_size')
 resize_default = config.get('output_info', 'resize_default_size')
 thumb_default = config.get('output_info', 'thumb_default_size')
 append_default = config.get('output_info', 'append_default')
-filetypes_default = config.get('locations', 'filetypes')
+filetypes_config = config.get('locations', 'filetypes')
+filetypes_default = []
+for filetype in re.split(',', filetypes_config):
+    filetypes_default.append(filetype.strip())
 output_filename_default = config.get('output_info', 'default_name')
 thumbnail_directory = config.get('locations', 'target_thumbnail')
 resize_directory = config.get('locations', 'target_resizes')
