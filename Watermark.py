@@ -43,7 +43,6 @@ filetypes_config = config.get('locations', 'filetypes')
 filetypes_default = []
 for filetype in re.split(',', filetypes_config):
     filetypes_default.append(filetype.strip())
-output_filename_default = config.get('output_info', 'default_name')
 thumbnail_directory = config.get('locations', 'target_thumbnail')
 resize_directory = config.get('locations', 'target_resizes')
 
@@ -54,6 +53,21 @@ def split_filename(filename):
     except IndexError:
         extension = '.JPG'
     return basename, extension
+
+def get_unique_filename(path, base, extension):
+    unique_filename = '%s%s%s' % (path, base, extension)
+    for number in range(1, 100):
+        if not os.path.isfile(unique_filename):
+            break
+        else:
+            if debug: print('Increment file to %d' % number)
+            unique_filename = '%s-%d%s' % (base, number, extension)
+    return unique_filename
+
+def get_directory_with_slash(directory):
+    if not directory.endswith('/'):
+        directory += '/'
+    return directory
 
 def watermark_image(source_path, destination_path, watermark_path,
                     output_size, debug, append, filename, create_thumb,
@@ -111,11 +125,16 @@ def watermark_image(source_path, destination_path, watermark_path,
             pass
     
     # Retrieve filename since none is provided
-    basename, extension = split_filename(filename if filename is not None
+    if debug: print('Source: %s, Filename: %s' % (source_path, filename))
+    basename, extension = split_filename(filename if filename
                                          else source_path)
+    
+    if debug: print('Base: %s, Extensions: %s' % (basename, extension));
     if os.path.isdir(destination_path):
         if debug: print('No filename given')
-        out_file = '%s%s%s' % (basename, append, extension)
+        base = '%s%s' % (basename, append)
+        out_file = get_unique_filename(destination_path, base, extension)
+        
         if create_thumb:
             thumb_destination_path += '%s' % out_file
             if debug: print('Thumb: %s' % thumb_destination_path)
@@ -196,7 +215,7 @@ if __name__ == "__main__":
                         resizes_size=resize_default,
                         debug=False,
                         append=append_default,
-                        output_filename=output_filename_default,
+                        output_filename=None,
                         filetypes=filetypes_default)
     parser.add_argument('-src', '-in',
                         dest='source', help='Source directory or file')
@@ -249,7 +268,7 @@ if __name__ == "__main__":
             if debug: print('processing filetype %s' %t)
             for f in glob.glob(os.path.dirname(source + '/') + '/*.' + t):
                 if debug: print('processing %s' % f)
-                watermark_image(f, destination + '/',
+                watermark_image(f, get_directory_with_slash(destination),
                                 watermark, size, debug, append,
                                 output_filename, thumbs, thumbs_size, resizes,
                                 resize_size)
