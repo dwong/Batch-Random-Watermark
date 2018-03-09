@@ -28,10 +28,10 @@ import glob
 import re
 import string
 import random
-import ConfigParser
+import configparser
 
-config = ConfigParser.ConfigParser()
-config.readfp(open('env.cfg'))
+config = configparser.ConfigParser()
+config.read_file(open(os.path.join(os.path.dirname(__file__), 'env.cfg')))
 source_default = config.get('locations', 'source')
 destination_default = config.get('locations', 'target')
 watermark_default = config.get('locations', 'watermark_file')
@@ -55,9 +55,9 @@ def split_filename(filename):
     return basename, extension
 
 def get_unique_filename(path, base, extension):
-    unique_filename = '%s%s%s' % (path, base, extension)
+    unique_filename = '%s%s' % (base, extension)
     for number in range(1, 100):
-        if not os.path.isfile(unique_filename):
+        if not os.path.isfile('%s%s' % (path, unique_filename)):
             break
         else:
             if debug: print('Increment file to %d' % number)
@@ -85,7 +85,7 @@ def watermark_image(source_path, destination_path, watermark_path,
         print("source: %s\ndest: %s\nwm: %s\noutput: %s" %
               (source_path, destination_path, watermark_path, output_size))
 
-    delimiter_position = string.find(output_size, 'x')
+    delimiter_position = output_size.find('x')
     horizontal = int(output_size[0:delimiter_position])
     vertical = int(output_size[delimiter_position+1:len(output_size)])
     gravity = ['NorthWest', 'North', 'NorthEast', 'West', 'East', 'SouthWest',
@@ -134,6 +134,7 @@ def watermark_image(source_path, destination_path, watermark_path,
         if debug: print('No filename given')
         base = '%s%s' % (basename, append)
         out_file = get_unique_filename(destination_path, base, extension)
+        if debug: print('Target Filename: %s' % out_file)
         
         if create_thumb:
             thumb_destination_path += '%s' % out_file
